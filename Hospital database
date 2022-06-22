@@ -1,0 +1,181 @@
+create database sistema;
+use sistema;
+
+create table hospital (
+id_hosp int auto_increment,
+cnpj_hosp varchar (14) default 1234567000100,
+nome_plano varchar (40) not null,
+id_ala int not null,
+primary key (id_hosp)
+);
+
+insert into hospital (nome_plano,id_ala) values ("SEGUROS UNIMED","1");
+insert into hospital (nome_plano,id_ala) values ("SAUDE AMIL","2");
+insert into hospital (nome_plano,id_ala) values ("MET LIFE","3");
+
+
+
+create table enfermeirachefe (
+nome_chef varchar(40) not null,
+cre_chef varchar (6) not null,
+primary key (cre_chef)
+);
+
+insert into enfermeirachefe values ("manu","789654");
+insert into enfermeirachefe values ("liliane","486251");
+insert into enfermeirachefe values ("jessica","596584");
+
+
+create table paciente (
+nome_pac varchar (50) not null,
+cpf_pac varchar (11) not null,
+tel_pac varchar (11) not null,
+nome_plano varchar(40) not null,
+crm_med varchar (6) not null,
+primary key (cpf_pac)
+);
+
+insert into paciente values ("Rafael","54987652140","31998486175","SEGUROS UNIMED","123456");
+
+
+
+insert into paciente values ("Júlia","14434366661","31997610734","SAUDE AMIL","456789");
+insert into paciente values ("Fissicaro","01015987455","31997610735","MET LIFE","789123");
+
+
+
+create table medico (
+nome_med varchar (40) not null,
+esp_med varchar (20) not null,
+cpf_med varchar (11) not null,
+crm_med varchar (6) not null,
+tel_med varchar (11) not null,
+primary key (crm_med)
+);
+
+insert into medico values ("Silvestre","Cirurgião","78965425877","123456","85498765488");
+insert into medico values ("Rocha","Ginecologista","85498754688","456789","85497568200");
+insert into medico values ("Calixto","Psiquiatra","87569845216","789123","58468742854");
+
+
+create table enfermeira (
+nome_enf varchar (40) not null,
+cre_enf varchar (6) not null,
+cre_chef varchar (6) not null,
+id_ala int not null,
+primary key (cre_enf)
+);
+
+insert into enfermeira(nome_enf,cre_enf,cre_chef,id_ala) values ("Julia","875985","789654","1");
+insert into enfermeira(nome_enf,cre_enf,cre_chef,id_ala) values ("Mairink","125635","486251","2");
+insert into enfermeira(nome_enf,cre_enf,cre_chef,id_ala) values ("Ricci","745689","596584","3");
+
+
+
+
+
+
+
+create table ala (
+nome_ala varchar (10) not null,
+id_ala int auto_increment not null,
+cre_chef varchar(6) not null,
+primary key (id_ala)
+);
+
+insert into ala(nome_ala,cre_chef) values ("verde","789654");
+insert into ala(nome_ala,cre_chef) values ("azul","486251");
+insert into ala(nome_ala,cre_chef) values ("marrom","596584");
+
+
+create table plano_saude (
+nome_plano varchar(40) not null,
+tel_plano varchar(11) not null,
+crm_med varchar(6) not null,
+primary key (nome_plano)
+);
+
+insert into plano_saude values ("SEGUROS UNIMED","12345678915","123456");
+insert into plano_saude values ("SAUDE AMIL","12345678929","456789");
+insert into plano_saude values ("MET LIFE","12345678999","789123");
+
+
+
+create table atendimento (
+num_atend int auto_increment,
+hora_atend varchar(5) not null,
+data_atend date not null,
+crm_med varchar(6) not null,
+cpf_pac varchar(11) not null,
+id_ala int not null,
+nome_plano varchar(40) not null,
+primary key (num_atend) 
+);
+
+insert into atendimento (hora_atend,data_atend,crm_med,cpf_pac,id_ala,nome_plano) values ("16:30","20220516","123456","54987652140","1","SEGUROS UNIMED");
+insert into atendimento (hora_atend,data_atend,crm_med,cpf_pac,id_ala,nome_plano) values ("17:00","20220517","456789","14434366661","2","SAUDE AMIL");
+
+
+
+insert into atendimento (hora_atend,data_atend,crm_med,cpf_pac,id_ala,nome_plano) values ("10:00","20220518","789123","01015987455","3","MET LIFE");
+
+alter table atendimento add foreign key (crm_med) references medico(crm_med);
+alter table atendimento add foreign key (cpf_pac) references paciente(cpf_pac);
+alter table atendimento add foreign key (id_ala) references ala(id_ala);
+alter table plano_saude add foreign key (crm_med) references medico(crm_med);
+alter table ala add foreign key (cre_chef) references enfermeirachefe(cre_chef);
+alter table enfermeira add foreign key (cre_chef) references enfermeirachefe(cre_chef);
+alter table enfermeira add foreign key (id_ala) references ala(id_ala);
+alter table paciente add foreign key (nome_plano) references plano_saude(nome_plano);
+alter table paciente add foreign key (crm_med) references medico(crm_med);
+alter table hospital add foreign key (nome_plano) references plano_saude(nome_plano);
+alter table hospital add foreign key (id_ala) references ala(id_ala);
+alter table atendimento add foreign key (nome_plano) references plano_saude(nome_plano);
+
+/* CONSULTAS */
+
+/* QUANTAS ALAS O HOSPITAL POSSUI? */
+select count(id_ala) as quantidade_alas from ala;
+
+/* ENFERMEIRAS AGRUPADAS PELA ENFERMEIRA CHEFE */
+select enfermeira.nome_enf, enfermeirachefe.nome_chef from enfermeira,enfermeirachefe 
+where enfermeirachefe.cre_chef=enfermeira.cre_chef;
+
+/* ALAS ATENDIDAS POR DETERMINADA ENFERMEIRA */
+select ala.id_ala, enfermeira.nome_enf from ala,enfermeira  
+where enfermeira.id_ala=ala.id_ala
+order by id_ala;
+
+/* PLANOS DE SAUDE AGRUPADOS POR MEDICOS CREDENCIADOS */
+select plano_saude.nome_plano, medico.nome_med from plano_saude, medico
+where plano_saude.crm_med = medico.crm_med;
+
+
+
+
+/* PACIENTES ATENDIDOS POR MÉDICO */
+select paciente.nome_pac, medico.nome_med from paciente,medico,atendimento
+where paciente.cpf_pac=atendimento.cpf_pac and medico.crm_med=atendimento.crm_med;
+
+/* CONSULTAS DO PACIENTE + INFORMAÇÕES */
+select paciente.nome_pac,plano_saude.nome_plano,atendimento.data_atend,medico.nome_med,medico.esp_med from paciente,medico,atendimento,plano_saude
+where paciente.cpf_pac=atendimento.cpf_pac and plano_saude.nome_plano=atendimento.nome_plano
+and medico.crm_med=atendimento.crm_med;
+
+/* GROUP BY + HAVING */
+select * from atendimento,plano_saude,ala
+where plano_saude.nome_plano=atendimento.nome_plano and ala.id_ala=atendimento.id_ala
+group by atendimento.num_atend
+having num_atend < 3;
+
+/* FUNÇÃO DE AGREGAÇÃO */
+select count(num_atend) as qtd_atend 
+from atendimento;
+
+/* BETWEEN */
+select * from ala
+where ala.id_ala between 1 and 2;
+
+/* LIKE */
+select * from paciente
+where paciente.nome_pac like 'J%'
